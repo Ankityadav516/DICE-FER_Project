@@ -1,3 +1,6 @@
+import torch
+import torch.nn as nn
+
 class MINE(nn.Module):
     def __init__(self, input_dim):
         super(MINE, self).__init__()
