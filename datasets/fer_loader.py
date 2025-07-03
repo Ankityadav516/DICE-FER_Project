@@ -1,5 +1,6 @@
 from torch.utils.data import Dataset
 from PIL import Image
+import torch
 
 class FERDataset(Dataset):
     def __init__(self, image_paths, labels, transform=None):
@@ -14,4 +15,4 @@ class FERDataset(Dataset):
         img = Image.open(self.image_paths[idx]).convert('RGB')
         if self.transform:
             img = self.transform(img)
-        return img, self.labels[idx]
+        return img, torch.tensor(self.labels[idx], dtype=torch.long)

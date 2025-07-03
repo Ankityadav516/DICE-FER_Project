@@ -7,28 +7,44 @@ from sklearn.metrics import accuracy_score
 import os
 import pandas as pd
 from torchvision import transforms
+import numpy as np
 
+# 📁 Load dataset
 csv_path = os.path.join("datasets", "rafdb", "train", "labels.csv")
 df = pd.read_csv(csv_path)
-image_paths = [os.path.join("datasets", "rafdb", "train", fname) for fname in df['filename']]
-labels = df['expression'].tolist()
-transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
-dataset = FERDataset(image_paths, labels, transform)
-dataloader = DataLoader(dataset, batch_size=8, shuffle=False)
+image_paths = [os.path.join("datasets", "rafdb", "train", fname) for fname in df["filename"]]
+labels = df["expression"].tolist()
 
-expr_enc = ExpressionEncoder().cuda()
-expr_enc.load_state_dict(torch.load("expression_model.pth"))
+# 🧼 Transformations
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+])
+
+dataset = FERDataset(image_paths, labels, transform)
+dataloader = DataLoader(dataset, batch_size=32, shuffle=False)
+
+# 🧠 Load pretrained Expression Encoder
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+expr_enc = ExpressionEncoder().to(device)
+expr_enc.load_state_dict(torch.load("expression_model.pth", map_location=device))
 expr_enc.eval()
 
+# 🧪 Extract features
 X, y = [], []
-for img, label in dataloader:
-    with torch.no_grad():
-        feat = expr_enc(img.cuda()).cpu()
-    X.append(feat)
-    y.extend(label)
+with torch.no_grad():
+    for img, label in dataloader:
+        img = img.to(device)
+        features = expr_enc(img).cpu().numpy()
+        X.append(features)
+        y.extend(label.tolist())
 
-X = torch.cat(X).numpy()
+X = np.concatenate(X, axis=0)
+y = np.array(y)
+
+# 📈 Logistic Regression
 clf = LogisticRegression(max_iter=1000)
 clf.fit(X, y)
 y_pred = clf.predict(X)
-print("Accuracy:", accuracy_score(y, y_pred))
+acc = accuracy_score(y, y_pred)
+print(f"📊 Expression Classification Accuracy (linear probe): {acc:.4f}")

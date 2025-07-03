@@ -1,6 +1,23 @@
+# 🔧 Model Configuration
 expr_output_dim: 128
 id_output_dim: 128
+
+# 🧪 Training Parameters
 batch_size: 8
 lr: 0.0001
 epochs: 10
+
+# 📁 Paths
 dataset_path: ./datasets/rafd
+csv_path: ./datasets/rafd/train/labels.csv
+model_save_path: ./checkpoints
+expr_model_path: expression_model.pth
+id_model_path: identity_model.pth
+
+# 🧹 Preprocessing
+image_size: [224, 224]
+
+# ⚙️ Optimization
+mine_lr: 0.00001
+mine_weight_decay: 0.0001
+clip_grad_norm: 5.0
