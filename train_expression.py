@@ -31,7 +31,7 @@ dataset = FERDataset(image_paths, labels, transform=transform)
 dataloader = DataLoader(dataset, batch_size=32, shuffle=True, drop_last=True)
 
 expr_enc = ExpressionEncoder().to(device)
-mine = MINE(input_dim=128).to(device)  # 64 + 64 = 128
+mine = MINE(input_dim=256).to(device)  # 128 + 128 = 256
 
 # 🔽 Smaller learning rate for expr_enc, weight decay added for mine
 expr_opt = optim.Adam(expr_enc.parameters(), lr=5e-5)
