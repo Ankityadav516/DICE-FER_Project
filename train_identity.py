@@ -84,7 +84,9 @@ for epoch in range(100):
 
         if step % 10 == 0:
             print(f"  Step {step}: Loss = {total_loss.item():.6f}")
-
+    if (epoch + 1) % 10 == 0:
+        torch.save(id_enc.state_dict(), f"identity_model_epoch{epoch+1}.pth")
+        print(f"✅ Saved checkpoint: identity_model_epoch{epoch+1}.pth")
 # 💾 Save identity encoder
 torch.save(id_enc.state_dict(), "identity_model.pth")
 print("✅ Identity encoder saved.")
