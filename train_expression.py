@@ -31,11 +31,13 @@ mine = MINE(128).cuda()
 opt = optim.Adam(list(expr_enc.parameters()) + list(mine.parameters()), lr=1e-4)
 
 for epoch in range(10):
-    for img, _ in dataloader:
+    print(f"\n📘 Epoch {epoch+1}/10")
+
+    for i, (img, _) in enumerate(dataloader):
         img = img.cuda()
         e1 = expr_enc(img)
         e2 = expr_enc(img[torch.randperm(img.size(0))])
-        
+
         joint = mine(e1, e1).mean()
         marg = torch.exp(mine(e1, e2)).mean()
         mi_loss = -(joint - torch.log(marg))
@@ -45,5 +47,8 @@ for epoch in range(10):
         opt.zero_grad()
         loss.backward()
         opt.step()
+
+        if i % 10 == 0:
+            print(f"  Step {i}: Loss = {loss.item():.4f}")
 
 torch.save(expr_enc.state_dict(), "expression_model.pth")
