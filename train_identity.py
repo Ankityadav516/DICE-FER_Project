@@ -14,9 +14,9 @@ from datasets.fer_loader import FERDataset
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # 📁 Load data
-csv_path = os.path.join("datasets", "rafdb", "train", "labels.csv")
+csv_path = "/content/datasets/rafdb/train/labels.csv"
 df = pd.read_csv(csv_path)
-image_paths = [os.path.join("datasets", "rafdb", "train", fname) for fname in df["filename"]]
+image_paths = [os.path.join("/content/datasets/rafdb/train", fname) for fname in df["filename"]]
 labels = df["expression"].tolist()
 
 transform = transforms.Compose([
