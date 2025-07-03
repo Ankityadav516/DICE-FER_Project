@@ -1,78 +1,81 @@
 import torch
-from torch import optim, nn
+from torch import optim
 from torch.utils.data import DataLoader
 from torchvision import transforms
-import torch.nn.functional as F
+from PIL import Image
 import os
 import pandas as pd
-from PIL import Image
 
 from models.encoder import ExpressionEncoder
 from models.mine import MINE
-from utils.losses import l1_loss
 from datasets.fer_loader import FERDataset
+from utils.losses import l1_loss
 
-# ✅ 1. Load dataset safely
+# Device config
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# 📁 Path to CSV
 csv_path = "/content/datasets/rafdb/train/labels.csv"
-df = pd.read_csv(csv_path)
-
-# Only keep images that actually exist
 base_path = "/content/datasets/rafdb/train"
+
+# ✅ Filter for only existing image paths
+df = pd.read_csv(csv_path)
 df = df[df["filename"].apply(lambda x: os.path.exists(os.path.join(base_path, x)))]
 
 image_paths = [os.path.join(base_path, fname) for fname in df["filename"]]
 labels = df["expression"].tolist()
 
-# ✅ 2. Apply transformations
+# 🧼 Transforms
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor()
 ])
 
-dataset = FERDataset(image_paths, labels, transform)
-dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+# 📦 Dataset and Loader
+dataset = FERDataset(image_paths, labels, transform=transform)
+dataloader = DataLoader(dataset, batch_size=8, shuffle=True)
 
-# ✅ 3. Initialize models
-expr_enc = ExpressionEncoder().cuda()
-mine = MINE(128).cuda()
+# 🧠 Models
+expr_enc = ExpressionEncoder().to(device)
+mine = MINE(input_dim=64).to(device)
 
-# ✅ 4. Optimizer
-opt = optim.Adam(list(expr_enc.parameters()) + list(mine.parameters()), lr=1e-4)
+# ⚙️ Optimizer
+optimizer = optim.Adam(list(expr_enc.parameters()) + list(mine.parameters()), lr=1e-4)
 
-# ✅ 5. Training Loop
-for epoch in range(10):
-    print(f"\n📘 Epoch {epoch+1}/10")
+# 🔁 Training loop
+epochs = 10
+for epoch in range(epochs):
+    print(f"\n📘 Epoch {epoch+1}/{epochs}")
     for step, (img, _) in enumerate(dataloader):
-        img = img.cuda()
+        img = img.to(device)
+        z = expr_enc(img)
+        z1, z2 = torch.chunk(z, 2, dim=0)
 
-        # Get embeddings
-        e1 = expr_enc(img)
-        e2 = expr_enc(img[torch.randperm(img.size(0))])
+        # 🔄 Shuffle for negative samples
+        idx = torch.randperm(z1.size(0))
+        z2_shuffled = z2[idx]
 
-        # 🔒 Normalize to prevent MI from exploding
-        e1 = F.normalize(e1, dim=1)
-        e2 = F.normalize(e2, dim=1)
+        # 💡 MINE loss
+        mi_pos = mine(z1, z2)
+        mi_neg = mine(z1, z2_shuffled)
+        mine_loss = -torch.mean(mi_pos) + torch.log(torch.mean(torch.exp(mi_neg)))
 
-        # Compute joint and marginal
-        joint = mine(e1, e1).mean()
-        log_marg = torch.log(torch.exp(mine(e1, e2)).clamp(min=1e-6)).mean()
+        # 🧮 L1 reconstruction loss
+        recon_loss = l1_loss(z1, z2)
 
-        # Mutual Information loss
-        mi_loss = -(joint - log_marg)
+        # 🎯 Total loss
+        total_loss = mine_loss + 0.1 * recon_loss
 
-        # Add L1 loss
-        l1 = l1_loss(e1, e2)
+        optimizer.zero_grad()
+        total_loss.backward()
 
-        # Total loss
-        loss = mi_loss + 0.1 * l1
+        # ✅ Gradient clipping
+        torch.nn.utils.clip_grad_norm_(expr_enc.parameters(), max_norm=5.0)
 
-        opt.zero_grad()
-        loss.backward()
-        opt.step()
+        optimizer.step()
 
-        # 📉 Print every 10 steps
         if step % 10 == 0:
-            print(f"  Step {step}: Loss = {loss.item():.4f}")
+            print(f"  Step {step}: Loss = {total_loss.item():.4f}")
 
 # ✅ 6. Save model
 torch.save(expr_enc.state_dict(), "expression_model.pth")
