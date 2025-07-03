@@ -15,11 +15,13 @@ csv_path = "/content/datasets/rafdb/train/labels.csv"
 
 df = pd.read_csv(csv_path)
 
-# Keep only entries where file physically exists
-df = df[df['filename'].apply(lambda x: os.path.exists(os.path.join("datasets/rafdb/train", x)))]
+# Use full absolute path
+base_path = "/content/datasets/rafdb/train"
+df = df[df["filename"].apply(lambda x: os.path.exists(os.path.join(base_path, x)))]
 
-image_paths = [os.path.join("datasets/rafdb/train", fname) for fname in df['filename']]
-labels = df['expression'].tolist()
+image_paths = [os.path.join(base_path, fname) for fname in df["filename"]]
+labels = df["expression"].tolist()
+
 transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
 dataset = FERDataset(image_paths, labels, transform)
 dataloader = DataLoader(dataset, batch_size=8, shuffle=True)
