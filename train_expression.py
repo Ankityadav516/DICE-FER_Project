@@ -33,7 +33,7 @@ transform = transforms.Compose([
 
 # 📦 Dataset and Loader
 dataset = FERDataset(image_paths, labels, transform=transform)
-dataloader = DataLoader(dataset, batch_size=8, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=8, shuffle=True, drop_last=True)
 
 # 🧠 Models
 expr_enc = ExpressionEncoder().to(device)
