@@ -37,7 +37,7 @@ mine = MINE(input_dim=256).to(device)  # 128 + 128 = 256
 expr_opt = optim.Adam(expr_enc.parameters(), lr=5e-5)
 mine_opt = optim.Adam(mine.parameters(), lr=1e-5, weight_decay=1e-4)
 
-epochs = 10
+epochs = 100
 for epoch in range(epochs):
     expr_enc.train()
     mine.train()
