@@ -10,7 +10,7 @@ import pandas as pd
 from torchvision import transforms
 from PIL import Image
 
-# Prepare dataset
+# Prepare dataset-->
 csv_path = os.path.join("datasets", "rafdb", "train", "labels.csv")
 df = pd.read_csv(csv_path)
 image_paths = [os.path.join("datasets", "rafdb", "train", fname) for fname in df['filename']]
