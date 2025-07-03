@@ -30,26 +30,39 @@ expr_enc = ExpressionEncoder().cuda()
 mine = MINE(128).cuda()
 opt = optim.Adam(list(expr_enc.parameters()) + list(mine.parameters()), lr=1e-4)
 
+EPS = 1e-8  # small epsilon to avoid log(0)
+
 for epoch in range(10):
     print(f"\n📘 Epoch {epoch+1}/10")
-
     for i, (img, _) in enumerate(dataloader):
         img = img.cuda()
         e1 = expr_enc(img)
         e2 = expr_enc(img[torch.randperm(img.size(0))])
 
+        # Clamp output for numerical stability
         joint = mine(e1, e1).mean()
-        marg = torch.exp(mine(e1, e2)).mean()
+
+        mine_score = mine(e1, e2)
+        mine_score = torch.clamp(mine_score, max=10)  # prevent overflow
+
+        marg = torch.exp(mine_score).mean()
+        marg = torch.clamp(marg, min=EPS)
+
         mi_loss = -(joint - torch.log(marg))
         l1 = l1_loss(e1, e2)
 
         loss = mi_loss + 0.1 * l1
+        if torch.isnan(loss):
+            print("🚨 NaN encountered! Skipping step")
+            continue
+
         opt.zero_grad()
         loss.backward()
         opt.step()
 
         if i % 10 == 0:
             print(f"  Step {i}: Loss = {loss.item():.4f}")
+
 
 torch.save(expr_enc.state_dict(), "/content/expression_model.pth")
 print("✅ Model saved: expression_model.pth")
