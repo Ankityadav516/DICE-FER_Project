@@ -51,4 +51,6 @@ for epoch in range(10):
         if i % 10 == 0:
             print(f"  Step {i}: Loss = {loss.item():.4f}")
 
-torch.save(expr_enc.state_dict(), "expression_model.pth")
+torch.save(expr_enc.state_dict(), "/content/expression_model.pth")
+print("✅ Model saved: expression_model.pth")
+
