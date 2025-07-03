@@ -45,7 +45,7 @@ opt = optim.Adam(
 
 # 🔁 Training loop
 for epoch in range(100):
-    print(f"\n📘 Epoch {epoch+1}/10")
+    print(f"\n📘 Epoch {epoch+1}/100")
     id_enc.train()
     dis.train()
     mine.train()
