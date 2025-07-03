@@ -14,7 +14,11 @@ from PIL import Image
 csv_path = "/content/datasets/rafdb/train/labels.csv"
 
 df = pd.read_csv(csv_path)
-image_paths = [os.path.join("datasets", "rafdb", "train", fname) for fname in df['filename']]
+
+# Keep only entries where file physically exists
+df = df[df['filename'].apply(lambda x: os.path.exists(os.path.join("datasets/rafdb/train", x)))]
+
+image_paths = [os.path.join("datasets/rafdb/train", fname) for fname in df['filename']]
 labels = df['expression'].tolist()
 transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
 dataset = FERDataset(image_paths, labels, transform)
