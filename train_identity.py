@@ -34,7 +34,7 @@ expr_enc.eval()
 
 id_enc = IdentityEncoder().to(device)
 dis = Discriminator(input_dim=128).to(device)
-mine = MINE(input_dim=128).to(device)  # e and i are 128-dim
+mine = MINE(input_dim=256).to(device)  # e and i are 256-dim
 
 # 🧮 Optimizer
 opt = optim.Adam(
