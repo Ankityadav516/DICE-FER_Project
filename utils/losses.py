@@ -9,9 +9,10 @@ def l1_loss(e1, e2):
 
 def adv_loss(real_score, fake_score):
     """
-    Adversarial loss using binary cross-entropy.
-    real_score: output of discriminator for real (matched) pairs
-    fake_score: output of discriminator for mismatched pairs
+    Adversarial loss using LSGAN (least-squares GAN):
+    Encourages real_score → 1 and fake_score → 0.
+    More stable than BCE-based GAN loss.
     """
-    eps = 1e-8  # for numerical stability
-    return -torch.mean(torch.log(real_score + eps) + torch.log(1 - fake_score + eps))
+    real_loss = F.mse_loss(real_score, torch.ones_like(real_score))
+    fake_loss = F.mse_loss(fake_score, torch.zeros_like(fake_score))
+    return real_loss + fake_loss

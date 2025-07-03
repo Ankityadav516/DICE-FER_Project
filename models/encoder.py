@@ -8,10 +8,15 @@ class ExpressionEncoder(nn.Module):
         resnet = models.resnet18(pretrained=True)
         self.features = nn.Sequential(*list(resnet.children())[:-1])
         self.fc = nn.Linear(resnet.fc.in_features, output_dim)
+        self.bn = nn.BatchNorm1d(output_dim)
+
+        # 🔧 Init
+        nn.init.xavier_normal_(self.fc.weight)
+        nn.init.zeros_(self.fc.bias)
 
     def forward(self, x):
         x = self.features(x).view(x.size(0), -1)
-        return self.fc(x)
+        return self.bn(self.fc(x))
 
 class IdentityEncoder(nn.Module):
     def __init__(self, output_dim=128):
@@ -19,8 +24,12 @@ class IdentityEncoder(nn.Module):
         resnet = models.resnet18(pretrained=True)
         self.features = nn.Sequential(*list(resnet.children())[:-1])
         self.fc = nn.Linear(resnet.fc.in_features, output_dim)
+        self.bn = nn.BatchNorm1d(output_dim)
+
+        # 🔧 Init
+        nn.init.xavier_normal_(self.fc.weight)
+        nn.init.zeros_(self.fc.bias)
 
     def forward(self, x):
         x = self.features(x).view(x.size(0), -1)
-        return self.fc(x)
-    
+        return self.bn(self.fc(x))

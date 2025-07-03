@@ -10,7 +10,6 @@ from models.discriminator import Discriminator
 from models.mine import MINE
 from datasets.fer_loader import FERDataset
 
-# 📍 Device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # 📁 Load data
@@ -25,16 +24,16 @@ transform = transforms.Compose([
 ])
 
 dataset = FERDataset(image_paths, labels, transform=transform)
-dataloader = DataLoader(dataset, batch_size=32, shuffle=True, drop_last=True)  # ✅ Larger batch
+dataloader = DataLoader(dataset, batch_size=32, shuffle=True, drop_last=True)
 
 # 🧠 Models
 expr_enc = ExpressionEncoder().to(device)
 expr_enc.load_state_dict(torch.load("expression_model.pth", map_location=device))
-expr_enc.eval()
+expr_enc.eval()  # 🔒 Freeze expression encoder
 
 id_enc = IdentityEncoder().to(device)
 dis = Discriminator(input_dim=128).to(device)
-mine = MINE(input_dim=256).to(device)  # e and i are 256-dim
+mine = MINE(input_dim=256).to(device)
 
 # 🧮 Optimizer
 opt = optim.Adam(
@@ -54,27 +53,25 @@ for epoch in range(100):
         img = img.to(device)
 
         with torch.no_grad():
-            e = expr_enc(img)  # Expression embeddings
+            e = expr_enc(img)
 
-        i = id_enc(img)       # Identity embeddings
-
-        # 🔀 Shuffle for negative MI samples
+        i = id_enc(img)
         i_shuffled = i[torch.randperm(i.size(0))]
 
-        # 📊 Mutual Information loss
+        # 📊 MINE loss
         mi_pos = mine(e, i)
         mi_neg = mine(e, i_shuffled)
-        mi_loss = -torch.mean(mi_pos) + torch.logsumexp(mi_neg, dim=0).mean() - torch.log(torch.tensor(i.size(0), dtype=torch.float).to(device))
+        log_batch_size = torch.log(torch.tensor(i.size(0), dtype=torch.float, device=device))
+        mi_loss = -torch.mean(mi_pos) + torch.logsumexp(mi_neg, dim=0).mean() - log_batch_size
 
-        # 🧨 Adversarial Loss
+        # 🧨 Adversarial loss (LSGAN-style)
         real_logits = dis(e, i)
         fake_logits = dis(e, i_shuffled)
-        adv_loss = -torch.mean(torch.log(real_logits + 1e-6) + torch.log(1 - fake_logits + 1e-6))
+        adv_loss = torch.mean((real_logits - 1)**2 + fake_logits**2)
 
-        # 🎯 Total loss
         total_loss = 1.0 * mi_loss + 0.1 * adv_loss
 
-        # ✅ Backprop
+        # 🔁 Backprop
         opt.zero_grad()
         total_loss.backward()
         torch.nn.utils.clip_grad_norm_(id_enc.parameters(), max_norm=5.0)
@@ -84,9 +81,15 @@ for epoch in range(100):
 
         if step % 10 == 0:
             print(f"  Step {step}: Loss = {total_loss.item():.6f}")
+
+    # 💾 Save every 10 epochs
     if (epoch + 1) % 10 == 0:
-        torch.save(id_enc.state_dict(), f"identity_model_epoch{epoch+1}.pth")
-        print(f"✅ Saved checkpoint: identity_model_epoch{epoch+1}.pth")
-# 💾 Save identity encoder
+        os.makedirs("checkpoints", exist_ok=True)
+        torch.save(id_enc.state_dict(), f"checkpoints/identity_model_epoch{epoch+1}.pth")
+        torch.save(dis.state_dict(), f"checkpoints/discriminator_epoch{epoch+1}.pth")
+        torch.save(mine.state_dict(), f"checkpoints/mine_epoch{epoch+1}.pth")
+        print(f"✅ Saved checkpoint at epoch {epoch+1}")
+
+# 🔚 Final save
 torch.save(id_enc.state_dict(), "identity_model.pth")
 print("✅ Identity encoder saved.")
