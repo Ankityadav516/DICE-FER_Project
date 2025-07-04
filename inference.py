@@ -2,17 +2,17 @@ import torch
 from torchvision import transforms
 from PIL import Image
 import os
+import torch.nn.functional as F
 
 from models.encoder import ExpressionEncoder
-import torch.nn.functional as F
 
 # ✅ Device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# ✅ Expression classes (as used during training)
+# ✅ Expression classes
 class_names = ['surprise', 'fear', 'disgust', 'happy', 'sad', 'angry', 'neutral']
 
-# ✅ Load models from Drive
+# ✅ Load saved encoder and classifier head
 expr_enc_path = "/content/drive/MyDrive/expression_model_final.pth"
 cls_head_path = "/content/drive/MyDrive/expression_classifier_final.pth"
 
@@ -24,20 +24,20 @@ classifier_head = torch.nn.Linear(128, 7).to(device)
 classifier_head.load_state_dict(torch.load(cls_head_path, map_location=device))
 classifier_head.eval()
 
-# ✅ Define preprocessing (same as training)
+# ✅ Preprocessing (same as during training)
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
 ])
 
-# ✅ Function to predict expression from image path
+# ✅ Predict expression from image
 def predict_expression(image_path):
     img = Image.open(image_path).convert("RGB")
     img_tensor = transform(img).unsqueeze(0).to(device)
 
     with torch.no_grad():
         z = expr_enc(img_tensor)
-        z1, _ = torch.chunk(z, 2, dim=0)  # use z1 as in training
+        z1, _ = torch.chunk(z, 2, dim=0)  # use z1
         logits = classifier_head(z1)
         probs = F.softmax(logits, dim=1)
         top_prob, top_class = torch.max(probs, dim=1)
@@ -45,11 +45,9 @@ def predict_expression(image_path):
     predicted = class_names[top_class.item()]
     confidence = top_prob.item()
     print(f"🧠 Predicted Expression: {predicted} ({confidence * 100:.2f}% confidence)")
-
     return predicted, confidence
 
-
-
-for fname in uploaded.keys():
-    print(f"\n📷 Running inference on: {fname}")
-    predict_expression(fname)
+# ✅ Example usage
+# Replace with the path of an image from your local system or Drive
+test_image = "/content/datasets/rafdb/train/img_00005.jpg"  # 🖼️ Your test image path
+predict_expression(test_image)
