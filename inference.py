@@ -48,9 +48,7 @@ def predict_expression(image_path):
 
     return predicted, confidence
 
-# ✅ Upload and run prediction
-from google.colab import files
-uploaded = files.upload()
+
 
 for fname in uploaded.keys():
     print(f"\n📷 Running inference on: {fname}")
