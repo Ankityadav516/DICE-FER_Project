@@ -3,17 +3,13 @@ from torchvision import transforms
 from PIL import Image
 import os
 import torch.nn.functional as F
-from google.colab import files  # 👉 Only for Colab upload
+import sys
 
 from models.encoder import ExpressionEncoder
 
-# ✅ Device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# ✅ Expression classes
 class_names = ['surprise', 'fear', 'disgust', 'happy', 'sad', 'angry', 'neutral']
 
-# ✅ Load saved models from Drive
 expr_enc_path = "/content/drive/MyDrive/expression_model_final.pth"
 cls_head_path = "/content/drive/MyDrive/expression_classifier_final.pth"
 
@@ -25,13 +21,11 @@ classifier_head = torch.nn.Linear(128, 7).to(device)
 classifier_head.load_state_dict(torch.load(cls_head_path, map_location=device))
 classifier_head.eval()
 
-# ✅ Transform
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
 ])
 
-# ✅ Prediction function
 def predict_expression(image_path):
     img = Image.open(image_path).convert("RGB")
     img_tensor = transform(img).unsqueeze(0).to(device)
@@ -46,12 +40,10 @@ def predict_expression(image_path):
     predicted = class_names[top_class.item()]
     confidence = top_prob.item()
     print(f"🧠 Predicted Expression: {predicted} ({confidence * 100:.2f}% confidence)")
-    return predicted, confidence
 
-# ✅ Ask user to upload an image
-print("📤 Please upload an image for inference:")
-uploaded = files.upload()
-
-for fname in uploaded.keys():
-    print(f"\n📷 Inference on: {fname}")
-    predict_expression(fname)
+# 👇 Manual path mode
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("⚠️  Usage: python inference.py <image_path>")
+    else:
+        predict_expression(sys.argv[1])
