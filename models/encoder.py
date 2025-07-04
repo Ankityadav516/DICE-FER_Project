@@ -5,7 +5,7 @@ import torchvision.models as models
 class ExpressionEncoder(nn.Module):
     def __init__(self, output_dim=128):
         super(ExpressionEncoder, self).__init__()
-        resnet = models.resnet18(pretrained=True)
+        resnet = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
         self.features = nn.Sequential(*list(resnet.children())[:-1])
         self.fc = nn.Linear(resnet.fc.in_features, output_dim)
         self.bn = nn.BatchNorm1d(output_dim)
@@ -21,7 +21,7 @@ class ExpressionEncoder(nn.Module):
 class IdentityEncoder(nn.Module):
     def __init__(self, output_dim=128):
         super(IdentityEncoder, self).__init__()
-        resnet = models.resnet18(pretrained=True)
+        resnet = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
         self.features = nn.Sequential(*list(resnet.children())[:-1])
         self.fc = nn.Linear(resnet.fc.in_features, output_dim)
         self.bn = nn.BatchNorm1d(output_dim)

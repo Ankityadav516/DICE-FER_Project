@@ -9,7 +9,7 @@ class Discriminator(nn.Module):
             nn.ReLU(),
             nn.Linear(512, 256),
             nn.ReLU(),
-            nn.Linear(256, 1)  # No sigmoid — we use raw scores
+            nn.Linear(256, 1)  # No sigmoid — we use raw scores for LSGAN
         )
 
     def forward(self, e, i):

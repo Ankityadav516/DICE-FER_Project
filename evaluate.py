@@ -9,6 +9,7 @@ import os
 import pandas as pd
 from torchvision import transforms
 import numpy as np
+import matplotlib.pyplot as plt
 
 # 📁 Load dataset
 csv_path = "/content/datasets/rafdb/train/labels.csv"
@@ -28,7 +29,7 @@ dataloader = DataLoader(dataset, batch_size=32, shuffle=False)
 # 🧠 Load pretrained encoder
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 expr_enc = ExpressionEncoder().to(device)
-expr_enc.load_state_dict(torch.load("expression_model.pth", map_location=device))
+expr_enc.load_state_dict(torch.load("/content/drive/MyDrive/expression_model.pth", map_location=device))
 expr_enc.eval()
 
 # 🧪 Feature extraction
@@ -56,6 +57,20 @@ clf.fit(X_train, y_train)
 # 🔍 Evaluate
 y_pred = clf.predict(X_test)
 acc = accuracy_score(y_test, y_pred)
-print(f"📊 Linear Probe Accuracy: {acc:.4f}")
+print(f"\n📊 Linear Probe Accuracy: {acc:.4f}")
 print("\n🔎 Classification Report:\n")
 print(classification_report(y_test, y_pred))
+
+# 📊 Plot class-wise accuracy
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+
+cm = confusion_matrix(y_test, y_pred)
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+plt.title("Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("True")
+os.makedirs("/content/drive/MyDrive/DICE-FER-Results", exist_ok=True)
+plt.savefig("/content/drive/MyDrive/DICE-FER-Results/expression_confusion_matrix.png")
+print("✅ Confusion matrix saved to Drive.")

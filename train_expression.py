@@ -5,15 +5,17 @@ from torchvision import transforms
 from PIL import Image
 import os
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from models.encoder import ExpressionEncoder
 from models.mine import MINE
 from datasets.fer_loader import FERDataset
 from utils.losses import l1_loss
 
+# ✅ Device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# 🔽 Dataset paths
+# ✅ Dataset paths
 csv_path = "/content/datasets/rafdb/train/labels.csv"
 base_path = "/content/datasets/rafdb/train"
 
@@ -44,7 +46,10 @@ expr_opt = optim.Adam(expr_enc.parameters(), lr=5e-5)
 cls_opt = optim.Adam(expr_cls_head.parameters(), lr=5e-5)
 mine_opt = optim.Adam(mine.parameters(), lr=1e-5, weight_decay=1e-4)
 
-epochs = 100
+# ✅ Accuracy tracking
+accuracies = []
+
+epochs = 60  # ⏱ Reduced to 60 as discussed
 for epoch in range(epochs):
     expr_enc.train()
     expr_cls_head.train()
@@ -65,29 +70,28 @@ for epoch in range(epochs):
 
         if z1.size(0) != z2.size(0): continue
 
-        # 🔀 Shuffle for negative MI sampling
+        # Shuffle for MI
         idx = torch.randperm(z2.size(0))
         z2_shuffled = z2[idx]
 
-        # 📉 Losses
+        # Losses
         mi_pos = mine(z1, z2)
         mi_neg = mine(z1, z2_shuffled)
 
-        mine_loss = -torch.mean(mi_pos) + torch.logsumexp(mi_neg, dim=0).mean() \
-                    - torch.log(torch.tensor(z1.size(0), dtype=torch.float).to(device))
+        mine_loss = -torch.mean(mi_pos) + torch.logsumexp(mi_neg, dim=0).mean() - torch.log(torch.tensor(z1.size(0), dtype=torch.float).to(device))
         recon_loss = l1_loss(z1, z2)
         logits = expr_cls_head(z1)
         cls_loss = torch.nn.functional.cross_entropy(logits, lbl1)
 
         total_loss = mine_loss + 0.1 * recon_loss + 0.5 * cls_loss
 
-        # 🧼 Backward
+        # Backward
         expr_opt.zero_grad()
         mine_opt.zero_grad()
         cls_opt.zero_grad()
         total_loss.backward()
 
-        # 🛡️ Gradient clipping
+        # Clip gradients
         torch.nn.utils.clip_grad_norm_(expr_enc.parameters(), max_norm=5.0)
         torch.nn.utils.clip_grad_norm_(mine.parameters(), max_norm=5.0)
 
@@ -95,7 +99,7 @@ for epoch in range(epochs):
         mine_opt.step()
         cls_opt.step()
 
-        # 🧪 Accuracy
+        # Accuracy
         _, preds = torch.max(logits, dim=1)
         total_correct += (preds == lbl1).sum().item()
         total_samples += lbl1.size(0)
@@ -104,16 +108,26 @@ for epoch in range(epochs):
             print(f"  Step {step}: Loss = {total_loss.item():.6f}")
 
     acc_epoch = total_correct / total_samples
+    accuracies.append(acc_epoch)
     print(f"✅ Epoch {epoch+1} Accuracy (on z1): {acc_epoch:.4f}")
 
-    # 💾 Save every 10 epochs
+    # Save checkpoint every 10 epochs
     if (epoch + 1) % 10 == 0:
-        os.makedirs("checkpoints", exist_ok=True)
-        torch.save(expr_enc.state_dict(), f"checkpoints/expression_encoder_epoch{epoch+1}.pth")
-        torch.save(expr_cls_head.state_dict(), f"checkpoints/expression_classifier_epoch{epoch+1}.pth")
-        print(f"💾 Saved checkpoint at epoch {epoch+1}")
+        os.makedirs("/content/drive/MyDrive/DICE-FER-Checkpoints", exist_ok=True)
+        torch.save(expr_enc.state_dict(), f"/content/drive/MyDrive/DICE-FER-Checkpoints/expression_encoder_epoch{epoch+1}.pth")
+        torch.save(expr_cls_head.state_dict(), f"/content/drive/MyDrive/DICE-FER-Checkpoints/expression_classifier_epoch{epoch+1}.pth")
+        print(f"📀 Saved checkpoint at epoch {epoch+1}")
 
-# 🔚 Final save
-torch.save(expr_enc.state_dict(), "expression_model.pth")
-torch.save(expr_cls_head.state_dict(), "expression_classifier_head.pth")
-print("✅ Expression encoder and classifier saved.")
+# Final save to Drive
+torch.save(expr_enc.state_dict(), "/content/drive/MyDrive/expression_model_final.pth")
+torch.save(expr_cls_head.state_dict(), "/content/drive/MyDrive/expression_classifier_final.pth")
+print("✅ Expression encoder and classifier saved to Drive.")
+
+# Plot accuracy
+plt.plot(range(1, len(accuracies) + 1), accuracies, marker='o')
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy on z1")
+plt.title("Expression Encoder Accuracy Over Epochs")
+plt.grid(True)
+plt.savefig("/content/drive/MyDrive/expression_accuracy_plot.png")
+plt.show()
