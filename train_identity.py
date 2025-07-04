@@ -31,7 +31,7 @@ dataloader = DataLoader(dataset, batch_size=32, shuffle=True, drop_last=True)
 
 # ✅ Models
 expr_enc = ExpressionEncoder().to(device)
-expr_enc.load_state_dict(torch.load("/content/drive/MyDrive/expression_model.pth", map_location=device))
+expr_enc.load_state_dict(torch.load("/content/drive/MyDrive/expression_model_final.pth", map_location=device))
 expr_enc.eval()  # Freeze
 
 id_enc = IdentityEncoder().to(device)
