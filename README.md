@@ -144,7 +144,7 @@ python inference.py path/to/image.jpg
 
 ---
 
-## ⚠Limitations and Future Work
+## Limitations and Future Work
 
 While the original DICE-FER paper included more components, we focused on the core disentanglement pipeline. Components we did not implement:
 
