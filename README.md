@@ -6,7 +6,7 @@ Our goal was to disentangle expression and identity features from facial images 
 
 ---
 
-## 👨‍💻 Team Members
+## Team Members
 
 * Ankit
 * Akash Guru
@@ -39,7 +39,7 @@ DICE-FER_Project/
 
 ---
 
-## 📊 Dataset: RAF-DB
+## Dataset: RAF-DB
 
 * The **Real-world Affective Faces Database (RAF-DB)** contains \~30,000 images labeled with 7 basic emotions:
 
@@ -49,7 +49,7 @@ DICE-FER_Project/
 
 ---
 
-## 🧠 Model Overview
+## Model Overview
 
 We implemented a simplified DICE-FER pipeline consisting of:
 
@@ -61,7 +61,7 @@ We implemented a simplified DICE-FER pipeline consisting of:
 
 ---
 
-## 🏋️ Training Setup
+## Training Setup
 
 * **Stage 1**: Train expression encoder + classifier using:
 
@@ -81,7 +81,7 @@ We implemented a simplified DICE-FER pipeline consisting of:
 
 ---
 
-## 📈 Evaluation & Results
+## Evaluation & Results
 
 We performed **linear probing** on expression features using logistic regression:
 
@@ -98,7 +98,7 @@ Visual outputs:
 
 ---
 
-## 📦 Pretrained Models
+## Pretrained Models
 
 Download the pretrained models and place them in the root folder (or update paths in the code):
 
@@ -110,7 +110,7 @@ Download the pretrained models and place them in the root folder (or update path
 
 ---
 
-## ▶️ How to Run
+##  How to Run
 
 ### 1. Install dependencies
 
@@ -144,7 +144,7 @@ python inference.py path/to/image.jpg
 
 ---
 
-## ⚠️ Limitations and Future Work
+## ⚠Limitations and Future Work
 
 While the original DICE-FER paper included more components, we focused on the core disentanglement pipeline. Components we did not implement:
 
@@ -157,13 +157,13 @@ These remain directions for future exploration.
 
 ---
 
-## 📚 References
+## References
 
 * DICE-FER: Disentangled Identity and Expression Representations for FER (CVPR 2020 Workshop)
 * RAF-DB: Real-world Affective Faces Database
 
 ---
 
-## 📃 License
+## License
 
 This repository is part of a course project and shared for educational purposes only.
