@@ -29,7 +29,7 @@ dataloader = DataLoader(dataset, batch_size=32, shuffle=False)
 # 🧠 Load pretrained encoder
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 expr_enc = ExpressionEncoder().to(device)
-expr_enc.load_state_dict(torch.load("/content/drive/MyDrive/expression_model.pth", map_location=device))
+expr_enc.load_state_dict(torch.load("/content/drive/MyDrive/expression_model_final.pth", map_location=device))
 expr_enc.eval()
 
 # 🧪 Feature extraction
