@@ -40,7 +40,7 @@ for class_id in sorted(os.listdir(src_root)):
 df = pd.DataFrame(records, columns=["filename", "expression"])
 df.to_csv(os.path.join(dst_root, "labels.csv"), index=False)
 
-print(f"✅ Copied {img_counter} images and created synced labels.csv")
+print(f" Copied {img_counter} images and created synced labels.csv")
 %cd /content/DICE-FER_Project
 !git pull
 !python3 /content/DICE-FER_Project/train_expression.py
@@ -84,7 +84,7 @@ for class_id in sorted(os.listdir(src_root)):
 df = pd.DataFrame(records, columns=["filename", "expression"])
 df.to_csv(os.path.join(dst_root, "labels.csv"), index=False)
 
-print(f"✅ Copied {img_counter} test images and created labels.csv")
+print(f" Copied {img_counter} test images and created labels.csv")
 
 
 !python3 /content/DICE-FER_Project/evaluate.py

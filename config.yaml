@@ -1,25 +1,25 @@
-# 🔧 Model Configuration
+#  Model Configuration
 expr_output_dim: 128
 id_output_dim: 128
 num_classes: 7
 
-# 🧪 Training Parameters
+#  Training Parameters
 batch_size: 32
 lr: 0.00005
 epochs: 100
 seed: 42
 
-# 📁 Paths
+#  Paths
 dataset_path: /content/datasets/rafdb/train
 csv_path: /content/datasets/rafdb/train/labels.csv
 model_save_path: /content/drive/MyDrive/DICE-FER-Results
 expr_checkpoint: /content/drive/MyDrive/expression_model.pth
 id_checkpoint: /content/drive/MyDrive/identity_model.pth
 
-# 🧹 Preprocessing
+# Preprocessing
 image_size: [224, 224]
 
-# ⚙️ Optimization
+#  Optimization
 mine_lr: 0.00001
 mine_weight_decay: 0.0001
 clip_grad_norm: 5.0

@@ -28,10 +28,10 @@ transform = transforms.Compose([
 
 def predict_expression(image_path):
     img = Image.open(image_path).convert("RGB")
-    img_tensor = transform(img).unsqueeze(0).to(device)  # batch of 1
+    img_tensor = transform(img).unsqueeze(0).to(device)  
 
     with torch.no_grad():
-        z = expr_enc(img_tensor)          # No need to chunk
+        z = expr_enc(img_tensor)         
         logits = classifier_head(z)
         probs = F.softmax(logits, dim=1)
         top_prob, top_class = torch.max(probs, dim=1)
@@ -41,9 +41,9 @@ def predict_expression(image_path):
     print(f"🧠 Predicted Expression: {predicted} ({confidence * 100:.2f}% confidence)")
     return predicted, confidence
 
-# 👇 Manual path mode
+# Manual path mode
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("⚠️  Usage: python inference.py <image_path>")
+        print("  Usage: python inference.py <image_path>")
     else:
         predict_expression(sys.argv[1])

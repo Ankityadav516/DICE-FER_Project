@@ -11,32 +11,32 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# ✅ Paths
+#  Paths
 test_csv = "/content/datasets/rafdb/test/labels.csv"
 test_base = "/content/datasets/rafdb/test"
 
-# ✅ Load test metadata
+#  Load test metadata
 df = pd.read_csv(test_csv)
 image_paths = [os.path.join(test_base, fname) for fname in df['filename']]
 labels = df['expression'].tolist()
 
-# ✅ Transform
+#  Transform
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
 ])
 
-# ✅ Dataset
+#  Dataset
 test_dataset = FERDataset(image_paths, labels, transform)
 test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 
-# ✅ Load encoder
+#  Load encoder
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 expr_enc = ExpressionEncoder().to(device)
 expr_enc.load_state_dict(torch.load("/content/drive/MyDrive/expression_model_final.pth", map_location=device))
 expr_enc.eval()
 
-# ✅ Extract test features
+#  Extract test features
 X_test, y_test = [], []
 with torch.no_grad():
     for img, label in test_loader:
@@ -50,7 +50,7 @@ with torch.no_grad():
 X_test = np.concatenate(X_test, axis=0)
 y_test = np.array(y_test)
 
-# ✅ Load train features (from saved file or re-extract)
+#  Load train features (from saved file or re-extract)
 # If you don’t have saved train features, extract from train again here
 train_csv = "/content/datasets/rafdb/train/labels.csv"
 df_train = pd.read_csv(train_csv)
@@ -73,18 +73,18 @@ with torch.no_grad():
 X_train = np.concatenate(X_train, axis=0)
 y_train = np.array(y_train)
 
-# ✅ Train classifier
+#  Train classifier
 clf = LogisticRegression(max_iter=1000)
 clf.fit(X_train, y_train)
 
-# ✅ Evaluate
+#  Evaluate
 y_pred = clf.predict(X_test)
 acc = accuracy_score(y_test, y_pred)
-print(f"\n📊 Linear Probe Accuracy on Test Set: {acc:.4f}")
-print("\n🔎 Classification Report:\n")
+print(f"\n Linear Probe Accuracy on Test Set: {acc:.4f}")
+print("\n Classification Report:\n")
 print(classification_report(y_test, y_pred))
 
-# ✅ Plot confusion matrix
+#  Plot confusion matrix
 cm = confusion_matrix(y_test, y_pred)
 plt.figure(figsize=(8, 6))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
@@ -93,4 +93,4 @@ plt.xlabel("Predicted")
 plt.ylabel("True")
 os.makedirs("/content/drive/MyDrive/DICE-FER-Results", exist_ok=True)
 plt.savefig("/content/drive/MyDrive/DICE-FER-Results/expression_confusion_matrix_testset.png")
-print("✅ Test Confusion matrix saved to Drive.")
+print(" Test Confusion matrix saved to Drive.")

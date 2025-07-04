@@ -10,7 +10,7 @@ class ExpressionEncoder(nn.Module):
         self.fc = nn.Linear(resnet.fc.in_features, output_dim)
         self.bn = nn.BatchNorm1d(output_dim)
 
-        # 🔧 Init
+        #  Init
         nn.init.xavier_normal_(self.fc.weight)
         nn.init.zeros_(self.fc.bias)
 
@@ -26,7 +26,7 @@ class IdentityEncoder(nn.Module):
         self.fc = nn.Linear(resnet.fc.in_features, output_dim)
         self.bn = nn.BatchNorm1d(output_dim)
 
-        # 🔧 Init
+        #  Init
         nn.init.xavier_normal_(self.fc.weight)
         nn.init.zeros_(self.fc.bias)
 
